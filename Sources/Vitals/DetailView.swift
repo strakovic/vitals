@@ -116,7 +116,7 @@ struct DetailView: View {
     private var metricPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 4) {
-                ForEach(Metric.allCases) { m in
+                ForEach(Metric.allCases.filter { $0 != .battery || monitor.system.power.hasBattery }) { m in
                     Button { metric = m; hover = nil } label: {
                         Text(m.label)
                             .font(Theme.caps(8))
@@ -177,6 +177,25 @@ struct DetailView: View {
                 Placeholder(symbol: "chart.xyaxis.line", text: "Collecting history…")
             } else {
                 Chart {
+                    if metric == .battery, let limit = ChargeLimit.current() {
+                        // The battery-friendly zone and the limit macOS holds it at, so a flat line reads as "held".
+                        RectangleMark(xStart: .value("From", Date(timeIntervalSince1970: now - range.rawValue)),
+                                      xEnd: .value("To", Date(timeIntervalSince1970: now)),
+                                      yStart: .value("Low", 20), yEnd: .value("High", Double(limit)))
+                            .foregroundStyle(Theme.lime.opacity(0.06))
+                        RuleMark(y: .value("Limit", Double(limit)))
+                            .foregroundStyle(Theme.lime.opacity(0.55))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                            .annotation(position: .top, alignment: .leading, spacing: 3) {
+                                Text("LIMIT \(limit)%").font(Theme.caps(7)).kerning(0.5).foregroundStyle(Theme.lime.opacity(0.8))
+                            }
+                        RuleMark(y: .value("Floor", 20))
+                            .foregroundStyle(Color.white.opacity(0.12))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                            .annotation(position: .bottom, alignment: .leading, spacing: 3) {
+                                Text("KIND TO THE BATTERY: 20 TO \(limit)%").font(Theme.caps(6.5)).kerning(0.5).foregroundStyle(Theme.faint)
+                            }
+                    }
                     ForEach(Array(spec.series.enumerated()), id: \.offset) { index, series in
                         ForEach(points, id: \.t) { p in
                             if let value = p.v[series.key] {

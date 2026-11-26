@@ -206,20 +206,29 @@ struct PanelView: View {
                          raw: monitor.history[.temp] ?? [], format: { "\(Int($0.rounded()))°" },
                          tint: s.cpuTemp >= 95 ? Theme.red : s.cpuTemp >= 85 ? Theme.orange : Theme.lime)
                     .clickable(inset: 3, radius: 9) { open(.temp) }
-                divider
-                MiniStat(label: "POWER", value: p.systemWatts > 0 ? Fmt.watts(p.systemWatts) : "--",
-                         history: monitor.normalizedHistory(.power),
-                         raw: monitor.history[.power] ?? [], format: { Fmt.watts($0) }, tint: Theme.lime)
-                    .clickable(inset: 3, radius: 9) { open(.power) }
+                // Desktop Macs without a battery may not report power at all; then the cell steps aside.
+                if p.hasBattery || p.systemWatts > 0 {
+                    divider
+                    MiniStat(label: "POWER", value: p.systemWatts > 0 ? Fmt.watts(p.systemWatts) : "--",
+                             history: monitor.normalizedHistory(.power),
+                             raw: monitor.history[.power] ?? [], format: { Fmt.watts($0) }, tint: Theme.lime)
+                        .clickable(inset: 3, radius: 9) { open(.power) }
+                }
                 divider
                 MiniStat(label: "NETWORK", value: Fmt.rate(s.netIn + s.netOut),
                          history: monitor.normalizedHistory(.net),
                          raw: monitor.history[.net] ?? [], format: { Fmt.rate($0) }, tint: Theme.lime)
                     .clickable(inset: 3, radius: 9) { open(.net) }
+                divider
                 if p.hasBattery {
-                    divider
                     batteryCell(p, temp: batteryTemp)
                         .clickable(inset: 3, radius: 9) { open(.battery) }
+                } else {
+                    // iMac, Mac mini, Mac Studio, Mac Pro: no battery, so disk activity takes its place.
+                    MiniStat(label: "DISK", value: Fmt.rate(s.diskRead + s.diskWrite),
+                             history: monitor.normalizedHistory(.disk),
+                             raw: monitor.history[.disk] ?? [], format: { Fmt.rate($0) }, tint: Theme.lime)
+                        .clickable(inset: 3, radius: 9) { open(.disk) }
                 }
             }
             .fixedSize(horizontal: false, vertical: true)

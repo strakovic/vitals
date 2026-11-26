@@ -40,7 +40,8 @@ struct BarSettings: View {
 
     /// Enabled metrics first, in bar order, then the rest.
     private var orderedMetrics: [Metric] {
-        prefs.bar + Metric.allCases.filter { !prefs.bar.contains($0) }
+        (prefs.bar + Metric.allCases.filter { !prefs.bar.contains($0) })
+            .filter { $0 != .battery || monitor.system.power.hasBattery }   // desktop Macs have none
     }
 
     private var preview: some View {

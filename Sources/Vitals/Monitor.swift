@@ -121,6 +121,7 @@ final class Monitor: ObservableObject {
         s.power = PowerInfo(systemWatts: 14.2, batteryPercent: 80, charging: false, pluggedIn: true, hasBattery: true,
                             timeRemaining: nil, cycleCount: 212, health: 0.93, batteryTemp: 32,
                             capacityNow: 5360, capacityDesign: 5760, held: true)
+        if ProcessInfo.processInfo.environment["VITALS_DESKTOP"] != nil { s.power = PowerInfo() }   // preview a Mac without a battery
         s.netIn = 2_400_000
         s.netOut = 310_000
         s.diskRead = 18_000_000

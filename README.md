@@ -1,26 +1,16 @@
 <p align="center">
-  <img src="docs/assets/icon.png" width="128" height="128" alt="Vitals icon">
-</p>
-
-<h1 align="center">Vitals</h1>
-
-<p align="center">
-  <b>Your Mac's vital signs, one click away.</b><br>
-  CPU, GPU, memory, heat, power, battery and every AI agent you run, live in the menu bar.<br>
-  Native, tiny, private. Free and open source.
+  <img src="docs/art/hero.png" alt="Vitals: your Mac's vital signs, one click away">
 </p>
 
 <p align="center">
-  <a href="https://github.com/strakovic/vitals/releases/latest"><b>Download</b></a> ·
-  <a href="https://strakovic.github.io/vitals/">Website</a> ·
+  <a href="https://github.com/strakovic/vitals/releases/latest"><b>Download for Mac</b></a> ·
+  <a href="https://strakovic.github.io/vitals/">Try the live demo</a> ·
   <a href="#install">Install</a> ·
   <a href="#how-it-works">How it works</a>
 </p>
 
 <p align="center">
-  <img src="docs/assets/panel.png" width="392" alt="The Vitals panel">
-  &nbsp;
-  <img src="docs/assets/ai.png" width="392" alt="AI agents in Vitals">
+  Notarized by Apple · Signed by diferent LLC · Open source (MIT) · No network access · No admin password
 </p>
 
 ## Install
@@ -33,33 +23,27 @@ curl -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | 
 
 It downloads the latest release, puts Vitals in Applications, opens it, and adds it to your login items.
 
-**Or download it yourself:** grab `Vitals.zip` from [Releases](https://github.com/strakovic/vitals/releases/latest), unzip it and drag Vitals to Applications. The first time, right-click Vitals and choose **Open** (or open it, then click **Open Anyway** in System Settings > Privacy & Security). That is macOS asking about apps that are not from the App Store; after that it opens normally.
+**Or download it:** get `Vitals.dmg` from [Releases](https://github.com/strakovic/vitals/releases/latest), open it and drag Vitals into Applications. It is signed by diferent LLC and notarized by Apple, so it opens like any other app.
 
 Requires a Mac with Apple silicon (M1 or newer) and macOS 14 Sonoma or later.
 
 ## What it does
 
-**One live chart.** CPU, GPU and memory together, with each core below. Hover the chart and the numbers rewind to that moment.
+<img src="docs/art/live.png" alt="One live chart, every app by load, quit anything in one click">
 
-**Who is using what.** Every app in one list, ordered by how much it costs your Mac, with CPU, memory and GPU side by side. Hover a row and quit it with one click. The list holds still while your pointer is on it.
+<img src="docs/art/agents.png" alt="AI agents: every task, stop anything in one click">
 
-**AI agents.** Claude Code sessions with the exact commands they are running, plus Codex, Gemini CLI, Aider, OpenCode, Amp, Goose, Cursor Agent, Copilot CLI, Qwen Code and Crush, found while they run. AI apps like ChatGPT, Cursor and Ollama are listed with them. Stop any task or a whole session from the card.
+<img src="docs/art/battery.png" alt="Battery care: charge limit, charge to 100% once, heat alerts">
 
-**Boost.** See where your memory went as one bar, tick what you do not need, and free it. Vitals also shuts idle iOS Simulators down once your coding agents go quiet, which can give back gigabytes.
+<img src="docs/art/boost.png" alt="Boost and history">
 
-**Battery care.** Set the charge limit (80, 85, 90, 95% or off) right from the menu bar, or charge to 100% just once before a long day. Health, cycles, temperature, and a notification naming the app when heat starts wearing the battery.
-
-**History.** Click any number for its chart: 15 minutes up to a month, with who was responsible at each point. Kept on your Mac, about 5 MB a year.
-
-**Your menu bar, your way.** Pick which numbers sit in the menu bar and in what order. Warning colours when something runs hot, full or low.
-
-<p align="center">
-  <img src="docs/assets/battery.png" width="300" alt="Battery care">
-  &nbsp;
-  <img src="docs/assets/history.png" width="300" alt="History">
-  &nbsp;
-  <img src="docs/assets/boost.png" width="300" alt="Boost">
-</p>
+- **One live chart.** CPU, GPU and memory together, with each core below. Hover the chart and the numbers rewind to that moment.
+- **Every app, heaviest first,** with CPU, memory and GPU side by side. **Quit any app in one click.** The list holds still while your pointer is on it.
+- **AI agents.** Claude Code sessions with the exact commands they are running, plus Codex, Gemini CLI, Aider, OpenCode, Amp, Goose, Cursor Agent, Copilot CLI, Qwen Code and Crush, and AI apps like ChatGPT, Cursor and Ollama. **Stop any task or session in one click.**
+- **Boost.** See where your memory went as one bar, tick what you do not need, and free it. Idle iOS Simulators shut themselves down once your agents go quiet.
+- **Battery care.** Set macOS's charge limit (80 to 95% or off) from the menu bar, or charge to 100% just once. Health, cycles, and a notification naming the app when heat starts wearing the battery. On iMac, Mac mini and Mac Studio, which have no battery, disk activity takes its place.
+- **History.** Click any number for its chart, from 15 minutes up to a month, with who was responsible at each point. Kept on your Mac, about 5 MB a year.
+- **Your menu bar, your way.** Pick which numbers sit in the menu bar and in what order.
 
 ## Lightweight by design
 
@@ -67,7 +51,7 @@ Requires a Mac with Apple silicon (M1 or newer) and macOS 14 Sonoma or later.
 |---|---|
 | CPU at idle | about 1% of one core, panel closed |
 | Full scan of every process | under 2 ms |
-| Download | under 2 MB |
+| Size | 1.8 MB download, 3.9 MB installed |
 | Network requests | none, ever |
 | Admin password | never asked for |
 

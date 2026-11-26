@@ -59,4 +59,21 @@ if [[ "${1:-}" == "release" ]]; then
     echo "Not notarized: needs a Developer ID Application certificate and ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH."
   fi
   echo "Release zip: build/Vitals.zip ($(du -h build/Vitals.zip | cut -f1))"
+
+  # The download people open: a disk image with Vitals next to an Applications shortcut.
+  STAGE="build/dmg"
+  rm -rf "$STAGE" build/Vitals.dmg
+  mkdir -p "$STAGE"
+  ditto "$APP" "$STAGE/Vitals.app"
+  ln -s /Applications "$STAGE/Applications"
+  hdiutil create -quiet -volname "Vitals" -srcfolder "$STAGE" -fs HFS+ -format ULFO build/Vitals.dmg
+  rm -rf "$STAGE"
+  if [[ "$IDENTITY" == Developer\ ID* ]]; then
+    codesign --force --timestamp --sign "$IDENTITY" build/Vitals.dmg
+    if [[ -n "${ASC_KEY_ID:-}" && -f "${ASC_KEY_PATH:-}" ]]; then
+      xcrun notarytool submit build/Vitals.dmg --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
+      xcrun stapler staple build/Vitals.dmg
+    fi
+  fi
+  echo "Release disk image: build/Vitals.dmg ($(du -h build/Vitals.dmg | cut -f1))"
 fi
