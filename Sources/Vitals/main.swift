@@ -57,6 +57,13 @@ if args.contains("--dump") {
     exit(0)
 }
 
+if let i = args.firstIndex(of: "--export"), i + 1 < args.count {
+    // Writes the full history as CSV without opening the app: Vitals --export history.csv
+    try? HistoryStore().exportCSV().write(toFile: args[i + 1], atomically: true, encoding: .utf8)
+    print("Saved", args[i + 1])
+    exit(0)
+}
+
 if let i = args.firstIndex(of: "--snapshot"), i + 1 < args.count {
     // Renders the panel (each tab) and the menu bar (dark and light) to PNGs, with live data.
     let dir = URL(fileURLWithPath: args[i + 1])

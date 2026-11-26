@@ -128,6 +128,30 @@ final class HistoryStore {
 
     var currentTop: [String: [TopUser]] { latestTop }
 
+    /// Everything recorded, as CSV: one row per point, oldest first. Hourly points for the long run,
+    /// then every minute of the last day, then the last minutes' samples. Top users go in the last
+    /// column as "name value; name value".
+    func exportCSV() -> String {
+        let columns = ["cpu", "gpu", "ram", "ramUsed", "swap", "temp", "power", "battery", "netIn", "netOut", "diskRead", "diskWrite", "claude"]
+        let iso = ISO8601DateFormatter()
+        iso.timeZone = .current
+        var lines = ["time,resolution," + columns.joined(separator: ",") + ",top_cpu,top_memory"]
+        func row(_ p: HistoryPoint, _ resolution: String) -> String {
+            let values = columns.map { key in p.v[key].map { String(format: $0.rounded() == $0 ? "%.0f" : "%.2f", $0) } ?? "" }
+            func top(_ kind: TopKind) -> String {
+                let list = p.top?[kind.rawValue]?.map { "\($0.n) \(kind == .memory ? Fmt.bytes(UInt64(max(0, $0.v))) : String(format: "%.1f", $0.v))" } ?? []
+                return "\"" + list.joined(separator: "; ").replacingOccurrences(of: "\"", with: "'") + "\""
+            }
+            return ([iso.string(from: Date(timeIntervalSince1970: p.t)), resolution] + values + [top(.cpu), top(.memory)]).joined(separator: ",")
+        }
+        let firstMinute = minutes.first?.t ?? .infinity
+        hours.filter { $0.t < firstMinute }.forEach { lines.append(row($0, "hour")) }
+        minutes.forEach { lines.append(row($0, "minute")) }
+        let lastMinute = minutes.last?.t ?? 0
+        fine.filter { $0.t > lastMinute }.forEach { lines.append(row($0, "sample")) }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
     /// A believable day of history for demo screenshots.
     func loadDemo(now: Double) {
         func value(_ i: Double, _ base: Double, _ swing: Double, _ seed: Double) -> Double {

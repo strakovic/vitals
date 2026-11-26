@@ -1,4 +1,6 @@
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Pick what the menu bar shows and how often it updates.
 struct BarSettings: View {
@@ -22,6 +24,7 @@ struct BarSettings: View {
                     Segments(options: [(1.0, "1 s"), (2.0, "2 s"), (5.0, "5 s")], selection: $prefs.interval)
                 }
                 LoginRow()
+                ExportRow(monitor: monitor)
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Warning colors").font(Theme.regular(12)).foregroundStyle(.white)
@@ -182,5 +185,41 @@ private struct LoginRow: View {
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
+    }
+}
+
+/// Saves everything Vitals has recorded as a CSV file.
+private struct ExportRow: View {
+    var monitor: Monitor
+    @State private var saved: String?
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Export all history").font(Theme.regular(12)).foregroundStyle(.white)
+                Text(saved ?? "CSV for Numbers, Excel or Sheets: every hour, minute and sample kept")
+                    .font(Theme.light(10)).foregroundStyle(saved == nil ? Theme.faint : Theme.lime.opacity(0.85)).lineLimit(1)
+            }
+            Spacer()
+            QuietButton(title: "Export…", symbol: "square.and.arrow.up", size: 11) { export() }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
+    }
+
+    private func export() {
+        let panel = NSSavePanel()
+        let day = Date().formatted(.iso8601.year().month().day())
+        panel.nameFieldStringValue = "Vitals history \(day).csv"
+        panel.allowedContentTypes = [.commaSeparatedText]
+        panel.canCreateDirectories = true
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try monitor.store.exportCSV().write(to: url, atomically: true, encoding: .utf8)
+            saved = "Saved \(url.lastPathComponent)"
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        } catch {
+            saved = "Couldn't save: \(error.localizedDescription)"
+        }
     }
 }
