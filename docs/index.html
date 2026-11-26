@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitals · Your Mac's vital signs</title>
+<meta name="description" content="CPU, GPU, memory, heat, battery and every AI agent you run, live in your Mac's menu bar. Native, tiny, private, free and open source.">
+<meta property="og:title" content="Vitals · Your Mac's vital signs">
+<meta property="og:description" content="CPU, GPU, memory, heat, battery and every AI agent you run, live in the menu bar. Free and open source.">
+<meta property="og:image" content="https://strakovic.github.io/vitals/assets/icon.png">
+<meta name="theme-color" content="#0a0b09">
+<link rel="icon" href="assets/icon.png">
+<style>
+  :root {
+    --bg: #0a0b09;
+    --bg2: #111310;
+    --card: rgba(255,255,255,.045);
+    --line: rgba(255,255,255,.08);
+    --text: #f3f5ee;
+    --dim: rgba(243,245,238,.58);
+    --faint: rgba(243,245,238,.34);
+    --lime: #d5ff5f;
+    --green: #399947;
+    --blue: #73adff;
+    --purple: #bd8cff;
+    --radius: 22px;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Inter, system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; max-width: 100%; }
+  .wrap { width: min(1160px, 100% - 40px); margin: 0 auto; }
+  .caps { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--lime); }
+
+  /* Nav */
+  nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 50;
+    backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+    background: rgba(10,11,9,.62); border-bottom: 1px solid transparent; transition: border-color .3s;
+  }
+  nav.scrolled { border-bottom-color: var(--line); }
+  nav .wrap { display: flex; align-items: center; height: 60px; gap: 28px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; }
+  .brand img { width: 28px; height: 28px; }
+  nav .links { display: flex; gap: 24px; margin-left: auto; font-size: 14px; color: var(--dim); }
+  nav .links a:hover { color: var(--text); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 999px;
+    font-weight: 600; font-size: 14.5px; transition: transform .2s, box-shadow .25s, background .2s;
+  }
+  .btn-lime { background: linear-gradient(135deg, var(--lime), #9be05a 60%, var(--green)); color: #10120d; box-shadow: 0 0 0 0 rgba(213,255,95,.0); }
+  .btn-lime:hover { transform: translateY(-1px); box-shadow: 0 10px 40px -8px rgba(213,255,95,.55); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--text); background: rgba(255,255,255,.03); }
+  .btn-ghost:hover { background: rgba(255,255,255,.08); }
+  nav .btn { height: 34px; font-size: 13.5px; padding: 0 14px; }
+
+  /* Hero */
+  .hero { position: relative; padding: 150px 0 40px; text-align: center; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: -20% -10% auto; height: 900px; pointer-events: none;
+    background: radial-gradient(600px 380px at 50% 30%, rgba(213,255,95,.16), transparent 70%),
+                radial-gradient(500px 300px at 80% 60%, rgba(57,153,71,.14), transparent 70%);
+  }
+  .pulse { position: absolute; left: 0; right: 0; top: 150px; height: 104px; pointer-events: none; opacity: .5; z-index: 0;
+           -webkit-mask: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); mask: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); }
+  .pulse path { fill: none; stroke: var(--lime); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+                stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: draw 4.5s cubic-bezier(.6,0,.2,1) .3s infinite; filter: drop-shadow(0 0 8px rgba(213,255,95,.8)); }
+  @keyframes draw { 0% { stroke-dashoffset: 2400; opacity: 1 } 70% { stroke-dashoffset: 0; opacity: 1 } 100% { stroke-dashoffset: 0; opacity: 0 } }
+  .hero-icon { position: relative; z-index: 1; width: 104px; height: 104px; margin: 0 auto 26px; filter: drop-shadow(0 18px 40px rgba(213,255,95,.28)); animation: float 6s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-8px) } }
+  h1 { font-size: clamp(44px, 7.4vw, 92px); line-height: 1.0; letter-spacing: -.045em; font-weight: 700; }
+  h1 .glow { background: linear-gradient(100deg, var(--lime), #e9ffb0 40%, #8fe06a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { max-width: 640px; margin: 22px auto 0; font-size: clamp(17px, 2vw, 21px); color: var(--dim); letter-spacing: -.01em; }
+  .cta { display: flex; justify-content: center; gap: 12px; margin-top: 34px; flex-wrap: wrap; }
+  .cta .btn { height: 48px; padding: 0 24px; font-size: 15.5px; }
+  .install {
+    display: inline-flex; align-items: center; gap: 12px; margin-top: 18px; max-width: 100%;
+    padding: 10px 10px 10px 18px; border-radius: 14px; background: var(--card); border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 13px; color: var(--dim);
+  }
+  .install code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .install code b { color: var(--lime); font-weight: 500; }
+  .copy { flex: none; border: 0; cursor: pointer; font: 600 12px var(--sans); color: #10120d; background: var(--lime); border-radius: 9px; padding: 7px 12px; transition: transform .15s; }
+  .copy:hover { transform: scale(1.05); }
+  .req { margin-top: 12px; font-size: 13px; color: var(--faint); }
+
+  /* The product shot: a menu bar with the panel hanging from it */
+  .stage { position: relative; margin: 70px auto 0; width: min(980px, 100%); }
+  .menubar {
+    height: 34px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: flex-end; gap: 18px; padding: 0 16px;
+    background: linear-gradient(#2a2c27, #1f211d); border: 1px solid var(--line); border-bottom: 0;
+    font: 500 13px var(--sans); color: rgba(255,255,255,.85);
+  }
+  .menubar .apple { margin-right: auto; display: flex; gap: 18px; color: rgba(255,255,255,.7); }
+  .menubar img { height: 22px; border-radius: 4px; }
+  .desk {
+    position: relative; height: 712px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 22px 22px; overflow: hidden;
+    background: radial-gradient(900px 500px at 70% 0%, rgba(213,255,95,.10), transparent 60%), linear-gradient(160deg, #191b16, #0c0d0b);
+  }
+  .desk .panel {
+    position: absolute; right: 34px; top: 10px; width: 392px; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 40px 120px -20px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.08), 0 0 80px -20px rgba(213,255,95,.35);
+    transform-origin: top right; animation: drop 1s cubic-bezier(.2,.9,.2,1) .4s both;
+  }
+  @keyframes drop { from { opacity: 0; transform: translateY(-14px) scale(.96) } }
+  .desk .panel img { width: 100%; }
+  .desk .copyblock { position: absolute; left: 48px; top: 60px; max-width: 380px; text-align: left; }
+  .desk .copyblock h3 { font-size: 30px; letter-spacing: -.03em; line-height: 1.1; }
+  .desk .copyblock p { color: var(--dim); margin-top: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .chip { font: 500 12.5px var(--sans); padding: 6px 11px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); color: var(--dim); }
+  .chip i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; background: var(--lime); vertical-align: 1px; }
+
+  /* Numbers */
+  .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 110px auto 0; border-radius: var(--radius); overflow: hidden; background: var(--line); border: 1px solid var(--line); }
+  .numbers div { background: var(--bg2); padding: 30px 26px; }
+  .numbers b { display: block; font-size: clamp(30px, 4vw, 46px); font-weight: 650; letter-spacing: -.04em; }
+  .numbers b em { font-style: normal; color: var(--lime); }
+  .numbers span { color: var(--dim); font-size: 14.5px; }
+
+  /* Story: sticky panel, chapters scrolling past */
+  section { padding: 130px 0 0; }
+  .head { max-width: 720px; }
+  .head h2 { font-size: clamp(34px, 5vw, 60px); letter-spacing: -.04em; line-height: 1.04; margin-top: 14px; font-weight: 700; }
+  .head p { color: var(--dim); font-size: 18px; margin-top: 16px; }
+  .story { display: grid; grid-template-columns: 1fr 440px; gap: 80px; margin-top: 70px; }
+  .chapters .ch { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; opacity: .28; transition: opacity .5s; }
+  .chapters .ch.on { opacity: 1; }
+  .ch .num { font-family: var(--mono); font-size: 12px; color: var(--lime); letter-spacing: .14em; }
+  .ch h3 { font-size: clamp(28px, 3.4vw, 42px); letter-spacing: -.035em; line-height: 1.08; margin-top: 12px; font-weight: 650; }
+  .ch p { color: var(--dim); font-size: 17.5px; margin-top: 16px; max-width: 520px; }
+  .ch ul { list-style: none; margin-top: 20px; display: grid; gap: 10px; }
+  .ch li { color: var(--dim); font-size: 15.5px; padding-left: 22px; position: relative; }
+  .ch li::before { content: ""; position: absolute; left: 0; top: 9px; width: 10px; height: 2px; background: var(--lime); border-radius: 2px; }
+  .ch .shot { display: none; }
+  .sticky { position: sticky; top: 90px; height: calc(100vh - 120px); display: flex; align-items: center; }
+  .device { position: relative; width: 100%; aspect-ratio: 392 / 668; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 50px 120px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.08), 0 0 100px -30px rgba(213,255,95,.4); }
+  .device img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transform: scale(1.02); transition: opacity .6s, transform .8s cubic-bezier(.2,.8,.2,1); }
+  .device img.on { opacity: 1; transform: none; }
+  .progress { position: absolute; left: -26px; top: 50%; transform: translateY(-50%); display: grid; gap: 8px; }
+  .progress i { width: 4px; height: 18px; border-radius: 4px; background: rgba(255,255,255,.12); transition: background .3s, height .3s; }
+  .progress i.on { background: var(--lime); height: 30px; }
+
+  /* Agents */
+  .agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 46px; }
+  .agent { padding: 18px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); transition: transform .25s, border-color .25s, background .25s; }
+  .agent:hover { transform: translateY(-3px); border-color: rgba(213,255,95,.35); background: rgba(213,255,95,.05); }
+  .agent b { display: block; font-weight: 600; }
+  .agent span { font-size: 13px; color: var(--faint); }
+
+  /* Cards */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 46px; }
+  .card { padding: 28px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); }
+  .card .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: rgba(213,255,95,.1); color: var(--lime); font-size: 18px; }
+  .card h4 { font-size: 19px; margin-top: 18px; letter-spacing: -.02em; }
+  .card p { color: var(--dim); margin-top: 8px; font-size: 15px; }
+  pre.code { margin-top: 18px; padding: 16px 18px; border-radius: 14px; background: #070806; border: 1px solid var(--line); font: 13px/1.7 var(--mono); color: var(--dim); overflow-x: auto; }
+  pre.code b { color: var(--lime); font-weight: 400; }
+
+  /* Final */
+  .final { text-align: center; padding: 160px 0 120px; position: relative; }
+  .final::before { content: ""; position: absolute; inset: 0; background: radial-gradient(500px 260px at 50% 55%, rgba(213,255,95,.13), transparent 70%); pointer-events: none; }
+  .final img { width: 88px; margin: 0 auto 28px; }
+  footer { border-top: 1px solid var(--line); padding: 30px 0 46px; color: var(--faint); font-size: 13.5px; }
+  footer .wrap { display: flex; gap: 20px; justify-content: space-between; flex-wrap: wrap; }
+  footer a:hover { color: var(--text); }
+
+  /* Reveal */
+  .rv { opacity: 0; transform: translateY(24px); transition: opacity .8s, transform .9s cubic-bezier(.2,.8,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  @media (max-width: 900px) {
+    nav .links { display: none; }
+    .desk { height: auto; padding: 40px 20px 30px; }
+    .desk .copyblock { position: static; max-width: none; margin-bottom: 28px; }
+    .desk .panel { position: relative; right: auto; top: auto; margin: 0 auto; width: min(392px, 100%); }
+    .numbers { grid-template-columns: repeat(2, 1fr); }
+    .story { grid-template-columns: 1fr; gap: 0; }
+    .sticky { display: none; }
+    .chapters .ch { min-height: 0; opacity: 1; padding: 40px 0; }
+    .ch .shot { display: block; width: min(392px, 100%); margin-top: 26px; border-radius: 16px; box-shadow: 0 0 0 1px var(--line); }
+    .grid3 { grid-template-columns: 1fr; }
+    .menubar .apple span:nth-child(n+3) { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .rv { opacity: 1; transform: none; }
+    .pulse path { stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon.png" alt="">Vitals</a>
+    <div class="links">
+      <a href="#tour">Tour</a>
+      <a href="#agents">AI agents</a>
+      <a href="#battery">Battery</a>
+      <a href="#open">Open source</a>
+    </div>
+    <a class="btn btn-ghost" href="https://github.com/strakovic/vitals">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <svg class="pulse" viewBox="0 0 1600 104" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 57 H640 L668 44 L696 57 H730 L762 8 L800 100 L832 34 L856 57 H1600"/>
+  </svg>
+  <div class="wrap" style="position:relative">
+    <img class="hero-icon" src="assets/icon.png" alt="Vitals app icon">
+    <h1>Your Mac's<br><span class="glow">vital signs.</span></h1>
+    <p class="lede">CPU, GPU, memory, heat, battery and every AI agent you run, live in your menu bar. Native, tiny and private. Free and open source.</p>
+    <div class="cta">
+      <a class="btn btn-lime" href="https://github.com/strakovic/vitals/releases/latest/download/Vitals.zip">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.45-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.76 2.27-1.6 2.78-.41 6.89 1.15 9.14.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.76-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.66zM14.1 5.86c.63-.77 1.06-1.83.94-2.9-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.27z"/></svg>
+        Download for Mac
+      </a>
+      <a class="btn btn-ghost" href="#tour">Take the tour</a>
+    </div>
+    <div class="install" title="Paste into Terminal">
+      <code><b>curl</b> -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | <b>bash</b></code>
+      <button class="copy" data-copy="curl -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | bash">Copy</button>
+    </div>
+    <p class="req">Apple silicon · macOS 14 or later · under 2 MB</p>
+
+    <div class="stage rv">
+      <div class="menubar">
+        <div class="apple"><span>&#63743;</span><span>Finder</span><span>File</span><span>Edit</span><span>View</span></div>
+        <img src="assets/menubar.png" alt="Vitals in the menu bar">
+        <span>Wed 9:41</span>
+      </div>
+      <div class="desk">
+        <div class="copyblock">
+          <p class="caps">One click from anywhere</p>
+          <h3>Everything that's happening on your Mac, on one calm screen.</h3>
+          <p>One live chart for CPU, GPU and memory. Heat, power, network and battery underneath. Then every app, ordered by what it costs you.</p>
+          <div class="chips">
+            <span class="chip"><i></i>CPU</span><span class="chip"><i style="background:var(--blue)"></i>GPU</span>
+            <span class="chip"><i style="background:var(--purple)"></i>Memory</span><span class="chip"><i></i>Temperature</span>
+            <span class="chip"><i></i>Power</span><span class="chip"><i></i>Battery</span><span class="chip"><i></i>AI agents</span>
+          </div>
+        </div>
+        <div class="panel"><img src="assets/panel.png" alt="The Vitals panel"></div>
+      </div>
+    </div>
+
+    <div class="numbers rv">
+      <div><b>~1<em>%</em></b><span>of one core at idle</span></div>
+      <div><b>&lt;2<em>ms</em></b><span>to scan every process</span></div>
+      <div><b>0</b><span>network requests, ever</span></div>
+      <div><b>0</b><span>admin passwords needed</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="tour">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="caps">The tour</p>
+      <h2>Built for people who keep a lot running.</h2>
+      <p>Coding agents, simulators, design tools, forty browser tabs. Vitals shows what each one costs and lets you do something about it.</p>
+    </div>
+    <div class="story">
+      <div class="chapters">
+        <article class="ch" data-shot="0">
+          <span class="num">01 · LIVE</span>
+          <h3>One chart. Three numbers. Every core.</h3>
+          <p>CPU, GPU and memory share one live chart, so you see them move together. Hover anywhere on it and the big numbers rewind to that moment.</p>
+          <img class="shot" src="assets/panel.png" alt="">
+        </article>
+        <article class="ch" data-shot="0">
+          <span class="num">02 · APPS</span>
+          <h3>Who's using your Mac, heaviest first.</h3>
+          <p>One list ordered by real load: CPU, memory and GPU together. Values turn orange, then red, as they get heavy.</p>
+          <ul><li>Quit anything from its row, with a force quit if it hangs</li><li>The list holds still under your pointer, so nothing jumps</li><li>Helpers are counted toward the app that owns them</li></ul>
+        </article>
+        <article class="ch" id="agents-ch" data-shot="1">
+          <span class="num">03 · AI AGENTS</span>
+          <h3>See exactly what your agents are doing.</h3>
+          <p>Every Claude Code session with the commands it is running right now. Codex, Gemini CLI, Aider and other agents show up the moment they start. Stop a task or a whole session from its card.</p>
+          <img class="shot" src="assets/ai.png" alt="">
+        </article>
+        <article class="ch" data-shot="2">
+          <span class="num">04 · BOOST</span>
+          <h3>Free memory in one click.</h3>
+          <p>Where your memory went, as one bar. Tick the apps you don't need, press Boost, and see what you got back. Idle iOS Simulators shut themselves down once your agents go quiet.</p>
+          <img class="shot" src="assets/boost.png" alt="">
+        </article>
+        <article class="ch" id="battery" data-shot="3">
+          <span class="num">05 · BATTERY CARE</span>
+          <h3>A battery that lasts years longer.</h3>
+          <p>Batteries wear fastest when they sit full and hot. Vitals keeps yours below full and tells you when heat is the problem, and which app causes it.</p>
+          <ul><li>Charge limit at 80, 85, 90 or 95%, or off</li><li>Charge to 100% once, for a long day away from power</li><li>Health, cycles and a notification when it runs hot</li></ul>
+          <img class="shot" src="assets/battery.png" alt="">
+        </article>
+        <article class="ch" data-shot="4">
+          <span class="num">06 · HISTORY</span>
+          <h3>From the last 15 minutes to the last month.</h3>
+          <p>Click any number for its history, with who was responsible at each point. Kept on your Mac, about 5 MB a year.</p>
+          <img class="shot" src="assets/history.png" alt="">
+        </article>
+      </div>
+      <div class="sticky">
+        <div class="device" id="device">
+          <img class="on" src="assets/panel.png" alt="Vitals overview">
+          <img src="assets/ai.png" alt="AI agents">
+          <img src="assets/boost.png" alt="Boost">
+          <img src="assets/battery.png" alt="Battery care">
+          <img src="assets/history.png" alt="History">
+          <div class="progress" id="progress"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="caps">Works with your tools</p>
+      <h2>Every agent, in one place.</h2>
+      <p>Vitals recognises these the moment they run. No setup, no plugins.</p>
+    </div>
+    <div class="agents rv">
+      <div class="agent"><b>Claude Code</b><span>sessions and live tasks</span></div>
+      <div class="agent"><b>Codex</b><span>OpenAI's coding agent</span></div>
+      <div class="agent"><b>Gemini CLI</b><span>Google</span></div>
+      <div class="agent"><b>Aider</b><span>pair programming</span></div>
+      <div class="agent"><b>OpenCode</b><span>terminal agent</span></div>
+      <div class="agent"><b>Amp</b><span>Sourcegraph</span></div>
+      <div class="agent"><b>Goose</b><span>Block</span></div>
+      <div class="agent"><b>Cursor Agent</b><span>CLI</span></div>
+      <div class="agent"><b>Copilot CLI</b><span>GitHub</span></div>
+      <div class="agent"><b>Qwen Code</b><span>Alibaba</span></div>
+      <div class="agent"><b>Crush</b><span>Charm</span></div>
+      <div class="agent"><b>AI apps</b><span>ChatGPT, Cursor, Ollama, LM Studio</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="open">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="caps">Open source · MIT</p>
+      <h2>Nothing leaves your Mac.</h2>
+      <p>No network code, no analytics, no account. Read every line on GitHub.</p>
+    </div>
+    <div class="grid3 rv">
+      <div class="card">
+        <div class="ic">&#9889;</div>
+        <h4>Native and tiny</h4>
+        <p>Swift and SwiftUI, no dependencies. The panel is only drawn while it's open, so it costs nothing in the background.</p>
+      </div>
+      <div class="card">
+        <div class="ic">&#9673;</div>
+        <h4>Public macOS interfaces</h4>
+        <p>Readings come straight from the kernel and IOKit. No root, no helper tools, no other programs running in the background.</p>
+      </div>
+      <div class="card">
+        <div class="ic">&#10022;</div>
+        <h4>Yours to change</h4>
+        <p>Build it in one command and make it yours.</p>
+        <pre class="code"><b>git clone</b> https://github.com/strakovic/vitals
+<b>cd</b> vitals && <b>./build.sh</b> install</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="final">
+  <div class="wrap rv">
+    <img src="assets/icon.png" alt="">
+    <h2 style="font-size:clamp(36px,5.4vw,64px);letter-spacing:-.04em;line-height:1.02;font-weight:700">Know your Mac.</h2>
+    <p class="lede">Free, open source, and in your menu bar in ten seconds.</p>
+    <div class="cta">
+      <a class="btn btn-lime" href="https://github.com/strakovic/vitals/releases/latest/download/Vitals.zip">Download for Mac</a>
+      <a class="btn btn-ghost" href="https://github.com/strakovic/vitals">Star on GitHub</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>Vitals · MIT License · made by <a href="https://diferentlabs.com">diferent</a></span>
+    <span><a href="https://github.com/strakovic/vitals">GitHub</a> · <a href="https://github.com/strakovic/vitals/releases">Releases</a> · <a href="https://github.com/strakovic/vitals/issues">Report an issue</a></span>
+  </div>
+</footer>
+
+<script>
+  // Nav hairline once you scroll.
+  const nav = document.getElementById('nav');
+  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 10), { passive: true });
+
+  // Copy the install command.
+  document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(button.dataset.copy); button.textContent = 'Copied'; }
+    catch { button.textContent = 'Select it'; }
+    setTimeout(() => button.textContent = 'Copy', 1600);
+  }));
+
+  // Fade sections in as they arrive.
+  const reveal = new IntersectionObserver(entries => entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); reveal.unobserve(e.target); }
+  }), { threshold: .15 });
+  document.querySelectorAll('.rv').forEach(el => reveal.observe(el));
+
+  // The tour: whichever chapter is in the middle of the screen drives the panel beside it.
+  const shots = [...document.querySelectorAll('#device img')];
+  const dots = [...document.querySelectorAll('#progress i')];
+  const chapters = [...document.querySelectorAll('.ch')];
+  const tour = new IntersectionObserver(entries => entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    chapters.forEach(c => c.classList.toggle('on', c === e.target));
+    const i = +e.target.dataset.shot;
+    shots.forEach((s, j) => s.classList.toggle('on', j === i));
+    dots.forEach((d, j) => d.classList.toggle('on', j === i));
+  }), { rootMargin: '-45% 0px -45% 0px' });
+  chapters.forEach(c => tour.observe(c));
+</script>
+</body>
+</html>
