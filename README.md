@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  Notarized by Apple · Signed by diferent LLC · Open source (MIT) · No network access · No admin password
+  Signed by diferent LLC · Open source (MIT) · No network access · No admin password · No tracking
 </p>
 
 ## Install
@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | 
 
 It downloads the latest release, puts Vitals in Applications, opens it, and adds it to your login items.
 
-**Or download it:** get `Vitals.dmg` from [Releases](https://github.com/strakovic/vitals/releases/latest), open it and drag Vitals into Applications. It is signed by diferent LLC and notarized by Apple, so it opens like any other app.
+**Or download it:** grab `Vitals.zip` from [Releases](https://github.com/strakovic/vitals/releases/latest), unzip it and drag Vitals to Applications. The first time, right-click Vitals and choose **Open**. A notarized disk image is on its way.
 
 Requires a Mac with Apple silicon (M1 or newer) and macOS 14 Sonoma or later.
 
