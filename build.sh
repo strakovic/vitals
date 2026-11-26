@@ -2,7 +2,9 @@
 # Builds Vitals.app into ./build.
 #   ./build.sh            build only
 #   ./build.sh install    copy to /Applications and start it at login (LaunchAgent)
-#   ./build.sh release    ad-hoc signed build zipped to build/Vitals.zip for GitHub Releases
+#   ./build.sh release    build/Vitals.zip for GitHub Releases. Signed with a "Developer ID Application"
+#                         certificate and notarized when one is in the keychain and an App Store Connect
+#                         API key is set (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH); ad-hoc signed otherwise.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -15,12 +17,15 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Vitals"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 [[ -f Resources/AppIcon.icns ]] && cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+DEVELOPER_ID="$(security find-identity -v -p codesigning 2>/dev/null | grep -m1 "Developer ID Application" | sed -E 's/.*"(.+)"/\1/' || true)"
 if [[ "${1:-}" == "release" ]]; then
-  IDENTITY="-"   # ad-hoc: no personal certificate inside public downloads
+  IDENTITY="${DEVELOPER_ID:--}"   # Developer ID, or ad-hoc: never a personal development certificate
 else
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | grep -m1 "Apple Development" | sed -E 's/.*"(.+)"/\1/' || true)"
 fi
-codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
+TIMESTAMP=()
+[[ "$IDENTITY" == Developer\ ID* ]] && TIMESTAMP=(--timestamp)
+codesign --force --options runtime "${TIMESTAMP[@]}" --sign "${IDENTITY:--}" "$APP"
 echo "Built $APP"
 
 if [[ "${1:-}" == "install" ]]; then
@@ -43,5 +48,15 @@ fi
 if [[ "${1:-}" == "release" ]]; then
   rm -f build/Vitals.zip
   ditto -c -k --keepParent "$APP" build/Vitals.zip
+  if [[ "$IDENTITY" == Developer\ ID* && -n "${ASC_KEY_ID:-}" && -n "${ASC_ISSUER_ID:-}" && -f "${ASC_KEY_PATH:-}" ]]; then
+    echo "Notarizing (a few minutes)..."
+    xcrun notarytool submit build/Vitals.zip --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
+    xcrun stapler staple "$APP"
+    rm -f build/Vitals.zip
+    ditto -c -k --keepParent "$APP" build/Vitals.zip
+    spctl -a -vv "$APP"
+  else
+    echo "Not notarized: needs a Developer ID Application certificate and ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH."
+  fi
   echo "Release zip: build/Vitals.zip ($(du -h build/Vitals.zip | cut -f1))"
 fi
