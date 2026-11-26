@@ -279,6 +279,51 @@
     .trust { gap: 6px; }
     .badge { font-size: 11.5px; }
   }
+
+  /* ---------- Polish ---------- */
+  /* Fine film grain over everything, for depth. */
+  body::after { content: ""; position: fixed; inset: -50%; z-index: 100; pointer-events: none; opacity: .035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain 1.2s steps(6) infinite; }
+  @keyframes grain { 0%{transform:translate(0,0)} 20%{transform:translate(-3%,2%)} 40%{transform:translate(2%,-3%)} 60%{transform:translate(-2%,-1%)} 80%{transform:translate(3%,3%)} 100%{transform:translate(0,0)} }
+  /* Scroll progress under the nav. */
+  .progressbar { position: absolute; left: 0; right: 0; bottom: -1px; height: 1.5px; transform-origin: left; transform: scaleX(0);
+    background: linear-gradient(90deg, transparent, var(--lime) 30%, var(--lime)); box-shadow: 0 0 10px rgba(213,255,95,.6); }
+  /* The headline gradient drifts slowly. */
+  h1 .glow { background-size: 220% 100%; animation: shimmer 9s ease-in-out infinite; }
+  @keyframes shimmer { 50% { background-position: 100% 0; } }
+  /* Words rising in. */
+  .words .w { display: inline-block; opacity: 0; transform: translateY(.4em); filter: blur(6px); transition: opacity .7s, transform .9s cubic-bezier(.2,.8,.2,1), filter .8s; }
+  .words.said .w { opacity: 1; transform: none; filter: none; }
+  h1 .glow .w { background: inherit; -webkit-background-clip: text; background-clip: text; }
+  /* Cursor spotlight. */
+  .spot { position: relative; isolation: isolate; }
+  .spot::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(260px circle at var(--x) var(--y), rgba(213,255,95,.09), transparent 65%); }
+  .spot:hover::before { opacity: 1; }
+  .spot::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; padding: 1px; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(180px circle at var(--x) var(--y), rgba(213,255,95,.55), transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .spot:hover::after { opacity: 1; }
+  .mac { transition: transform .5s cubic-bezier(.2,.8,.2,1); transform-style: preserve-3d; will-change: transform; }
+  /* Live readout under the buttons. */
+  .readout { display: inline-block; margin-top: 16px; max-width: 92vw; line-height: 1.6; font-size: 12.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .readout b { color: var(--dim); font-weight: 500; }
+  .readout i { display: inline-block; vertical-align: 1px; margin-right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0 rgba(213,255,95,.6); animation: live 1.8s ease-out infinite; }
+  @keyframes live { 0% { box-shadow: 0 0 0 0 rgba(213,255,95,.55); } 100% { box-shadow: 0 0 0 9px rgba(213,255,95,0); } }
+  /* Buttons: a light sweep on hover. */
+  .btn { position: relative; overflow: hidden; }
+  .btn-lime::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); transform: translateX(-120%); }
+  .btn-lime:hover::after { transform: translateX(120%); transition: transform .8s ease; }
+  /* Footer signature. */
+  .sign { position: relative; height: 180px; overflow: hidden; margin-top: -40px; }
+  .sign svg { position: absolute; left: 0; width: 100%; top: 40px; height: 90px; }
+  .sign path { fill: none; stroke: var(--lime); stroke-width: 1.6; stroke-dasharray: 2600; stroke-dashoffset: 2600; opacity: .55; filter: drop-shadow(0 0 6px rgba(213,255,95,.7)); }
+  .sign.in path { animation: sign 3.2s cubic-bezier(.6,0,.2,1) forwards; }
+  @keyframes sign { to { stroke-dashoffset: 0; } }
+  .sign b { position: absolute; left: 50%; bottom: -46px; transform: translateX(-50%); font-size: clamp(90px, 18vw, 240px); font-weight: 800; letter-spacing: -.06em; line-height: 1;
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 80%); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .words .w { opacity: 1; transform: none; filter: none; } body::after { animation: none; } }
 </style>
 </head>
 <body>
@@ -294,6 +339,7 @@
     </div>
     <a class="btn btn-ghost" href="https://github.com/strakovic/vitals">GitHub</a>
   </div>
+  <div class="progressbar"></div>
 </nav>
 
 <header class="hero">
@@ -309,6 +355,7 @@
       </a>
       <a class="btn btn-ghost" href="#tour">Take the tour</a>
     </div>
+    <div><span class="readout" data-readout></span></div>
     <div class="install" title="Paste into Terminal">
       <code><b>curl</b> -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | <b>bash</b></code>
       <button class="copy" data-copy="curl -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | bash">Copy</button>
@@ -494,6 +541,10 @@
   </div>
 </div>
 
+<div class="sign rv" aria-hidden="true">
+  <svg viewBox="0 0 1600 90" preserveAspectRatio="none"><path d="M0 60 H700 L725 52 L750 60 H770 L792 14 L815 84 L835 40 L852 60 H1600"/></svg>
+  <b>Vitals</b>
+</div>
 <footer>
   <div class="wrap">
     <span>Vitals · MIT License · made by <a href="https://diferentlabs.com">diferent</a></span>
@@ -503,6 +554,7 @@
 
 <script src="live.js"></script>
 <script src="pulse.js"></script>
+<script src="polish.js"></script>
 <script>
   const nav = document.getElementById('nav');
   addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 10), { passive: true });
