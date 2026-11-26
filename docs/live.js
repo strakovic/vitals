@@ -156,14 +156,14 @@
           <svg viewBox="0 0 100 12" preserveAspectRatio="none"><path data-ms="${k}" fill="none" stroke="${C.lime}" stroke-opacity=".7" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>
         </div>`;
       return `
-      <div class="vp-head">
+      <div class="vp-head" data-zone="head">
         <span class="dot"></span><span class="title">VITALS</span>
         <span class="vp-chip click" data-open="temp"><span>🔥</span><span data-thermal>COOL</span></span>
         <span class="vp-boost click" data-go="boost">⚡ Boost</span>
       </div>
       <div class="vp-body">
         <div class="vp-view vp-main" data-view="main" style="display:flex;flex-direction:column">
-          <div class="vp-card vp-live">
+          <div class="vp-card vp-live" data-zone="live">
             <div class="vp-stats3">${stat('cpu', 'CPU', C.lime)}${stat('gpu', 'GPU', C.blue)}${stat('mem', 'Memory', C.purple)}</div>
             <div class="vp-chart" data-chart>
               <svg viewBox="0 0 334 66" preserveAspectRatio="none">
@@ -177,7 +177,7 @@
             </div>
             <div class="vp-cores"><span class="caps" style="color:rgba(255,255,255,.28);font-size:7px">CORES</span><div class="bars">${sim.cores.map((_, i) => `<div class="bar"><b data-core="${i}" style="background:${i < 4 ? 'rgba(57,153,71,.95)' : 'var(--vgrad)'}"></b></div>`).join('')}</div></div>
           </div>
-          <div class="vp-card vp-strip">
+          <div class="vp-card vp-strip" data-zone="strip">
             ${mini('temp', 'Temp')}<div class="vp-div"></div>${mini('power', 'Power')}<div class="vp-div"></div>${mini('net', 'Network')}<div class="vp-div"></div>
             <div class="vp-mini vp-hl click" data-go="battery">
               <div class="caps">Battery</div>
@@ -185,12 +185,12 @@
               <div class="vp-held" data-held>held at 80%</div>
             </div>
           </div>
-          <div class="vp-tabs">
+          <div class="vp-tabs" data-zone="list">
             <div class="vp-tab click" data-tab="apps">Apps</div>
             <div class="vp-tab click" data-tab="ai">AI<span class="badge" data-badge>2</span></div>
             <div class="vp-tab click" data-tab="bar">Menu bar</div>
           </div>
-          <div class="vp-pane" style="position:relative;flex:1;margin-top:8px;top:auto">
+          <div class="vp-pane" data-zone="list" style="position:relative;flex:1;margin-top:8px;top:auto">
             <div data-pane="apps" style="position:absolute;inset:0">
               <div class="vp-thead"><span class="caps" data-hold style="flex:1;color:rgba(255,255,255,.45)">By load on your Mac</span>
                 <span class="caps vp-col" style="width:46px;color:rgba(255,255,255,.45)">CPU</span><span class="caps vp-col" style="width:62px;color:rgba(255,255,255,.45)">Memory</span><span class="caps vp-col" style="width:40px;color:rgba(255,255,255,.45)">GPU</span><span style="width:24px"></span></div>
@@ -205,7 +205,7 @@
         <div class="vp-view out" data-view="battery"><div class="vp-scroll" style="padding-top:10px" data-battery></div></div>
         <div class="vp-view out" data-view="history"><div class="vp-scroll" style="padding-top:10px" data-history></div></div>
       </div>
-      <div class="vp-foot"><span class="vp-quiet click">↗ Activity Monitor</span><span class="vp-quiet click">Quit</span></div>
+      <div class="vp-foot" data-zone="foot"><span class="vp-quiet click">↗ Activity Monitor</span><span class="vp-quiet click">Quit</span></div>
       <div class="vp-toast" data-toast></div>`;
     }
 
@@ -234,6 +234,9 @@
 
     /** Used by the tour: put the panel on a screen. */
     show(state) {
+      // Light up the part of the panel the chapter is about; dim the rest.
+      const focus = { main: 'live', apps: 'list', ai: 'list' }[state];
+      if (focus) this.el.dataset.focus = focus; else delete this.el.dataset.focus;
       if (state === 'boost' || state === 'battery' || state === 'history') { if (state === 'history') this.metric = 'cpu'; this.go(state); }
       else { this.tab = state === 'ai' ? 'ai' : 'apps'; this.go('main'); }
     }
