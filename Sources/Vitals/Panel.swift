@@ -904,10 +904,12 @@ struct AppRow: View {
 struct SessionCard: View {
     var session: ClaudeSession
     var refresh: () -> Void = {}
-    @State private var showBackground = false
+    @State private var expanded = ProcessInfo.processInfo.environment["VITALS_EXPAND"] != nil   // snapshots can open it
     @State private var hovering = false
     @State private var stopping: StopState = .none
     @State private var order = StableOrder<pid_t>()
+
+    private func toggle() { withAnimation(.spring(response: 0.36, dampingFraction: 0.88)) { expanded.toggle() } }
 
     private var statusColor: Color {
         switch session.status {
@@ -958,38 +960,40 @@ struct SessionCard: View {
                     Text("·")
                     Text(Fmt.age(Date().timeIntervalSince(started)))
                 }
-                if !background.isEmpty {
-                    Text("·")
-                    Button { withAnimation(.easeOut(duration: 0.2)) { showBackground.toggle() } } label: {
-                        HStack(spacing: 3) {
-                            Text("\(background.count) \(background.count == 1 ? "helper" : "helpers")")
-                            Image(systemName: showBackground ? "chevron.up" : "chevron.down").font(.system(size: 6.5, weight: .bold))
-                        }
+                Text("·")
+                // Opens the breakdown: what the agent itself, each task and each helper is using.
+                Button(action: toggle) {
+                    HStack(spacing: 3) {
+                        Text("\(tasks.count + 1) processes")
+                        Image(systemName: "chevron.down").font(.system(size: 6.5, weight: .bold))
+                            .rotationEffect(.degrees(expanded ? 180 : 0))
                     }
-                    .buttonStyle(.plain)
-                    .pointer()
+                    .foregroundStyle(expanded ? Theme.lime.opacity(0.85) : Theme.faint)
                 }
+                .buttonStyle(.plain)
+                .pointer()
                 Spacer(minLength: 0)
             }
             .font(Theme.light(9.5))
             .foregroundStyle(Theme.faint)
             .padding(.leading, 20)
 
-            if !active.isEmpty {
+            if expanded {
+                UsageBreakdown(session: session, tasks: active + background, refresh: refresh)
+                    .padding(.top, 6)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            } else if !active.isEmpty {
                 VStack(alignment: .leading, spacing: 1) {
                     ForEach(active.prefix(5)) { task in TaskRow(task: task, refresh: refresh) }
                 }
                 .padding(.leading, 20)
                 .padding(.top, 2)
             }
-            if showBackground && !background.isEmpty {
-                VStack(alignment: .leading, spacing: 3) {
-                    ForEach(background) { task in TaskRow(task: task, dim: true, refresh: refresh) }
-                }
-                .padding(.horizontal, 8)
-            }
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
+        .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .onTapGesture(perform: toggle)
+        .pointer()
         .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.card.opacity(hovering ? 1.6 : 1)))
         .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous)
             .stroke(session.isBusy ? Theme.lime.opacity(hovering ? 0.4 : 0.26) : Theme.hairline.opacity(hovering ? 2 : 1), lineWidth: 1))

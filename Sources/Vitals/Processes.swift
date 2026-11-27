@@ -63,6 +63,9 @@ struct ClaudeSession: Identifiable {
     var watts: Double = 0
     var tasks: [ClaudeTask] = []
     var tool: AITool = .claudeCode
+    /// The agent's own process, without the tasks and helpers it started.
+    var ownCpu: Double = 0
+    var ownMemory: UInt64 = 0
     var isBusy: Bool { status == "busy" }
 }
 
@@ -220,7 +223,10 @@ final class ProcessScanner {
                     s.gpu += process.gpu
                     s.memory += process.memory
                     s.watts += process.watts
-                    if pid != session {
+                    if pid == session {
+                        s.ownCpu += process.cpu
+                        s.ownMemory += process.memory
+                    } else {
                         // Fold each process into the tool call it came from (the session's direct child),
                         // so a shell running a Python script reads as one task.
                         var top = pid

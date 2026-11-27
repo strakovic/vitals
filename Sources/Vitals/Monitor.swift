@@ -149,21 +149,36 @@ final class Monitor: ObservableObject {
             app("/System/Applications/Mail.app", "Mail", cpu: 0.2, gpu: 0, gb: 0.3, procs: 3),
         ]
         let now = Date()
-        func task(_ pid: pid_t, _ command: String, cpu: Double, age: TimeInterval) -> ClaudeTask {
-            ClaudeTask(pid: pid, command: command, cpu: cpu, memory: 200_000_000, age: age)
+        func task(_ pid: pid_t, _ command: String, cpu: Double, mb: Double, age: TimeInterval) -> ClaudeTask {
+            ClaudeTask(pid: pid, command: command, cpu: cpu, memory: UInt64(mb * 1_000_000), age: age)
+        }
+        // Totals are the agent's own process plus everything it started, as in a real scan.
+        func session(_ pid: pid_t, _ name: String, _ status: String, _ folder: String, started: TimeInterval,
+                     cpu: Double, mb: Double, tasks: [ClaudeTask] = [], tool: AITool = .claudeCode) -> ClaudeSession {
+            var s = ClaudeSession(pid: pid, name: name, status: status, folder: folder, entrypoint: tool == .claudeCode ? "cli" : "",
+                                  startedAt: now.addingTimeInterval(-started), tasks: tasks, tool: tool)
+            s.ownCpu = cpu
+            s.ownMemory = UInt64(mb * 1_000_000)
+            s.cpu = cpu + tasks.reduce(0) { $0 + $1.cpu }
+            s.memory = s.ownMemory + tasks.reduce(0) { $0 + $1.memory }
+            return s
         }
         sessions = [
-            ClaudeSession(pid: 90001, name: "Ship the onboarding flow", status: "busy", folder: "~/code/atlas", entrypoint: "cli",
-                          startedAt: now.addingTimeInterval(-5400), cpu: 6.1, gpu: 0, memory: 690_000_000,
-                          tasks: [task(90011, "swift build -c release", cpu: 5.2, age: 41), task(90012, "npm run dev", cpu: 0.6, age: 1900)]),
-            ClaudeSession(pid: 90002, name: "Fix flaky checkout tests", status: "busy", folder: "~/code/shop", entrypoint: "cli",
-                          startedAt: now.addingTimeInterval(-2700), cpu: 2.1, gpu: 0, memory: 410_000_000,
-                          tasks: [task(90021, "pytest tests/checkout -x", cpu: 1.9, age: 12)]),
-            ClaudeSession(pid: 90003, name: "Write the release notes", status: "idle", folder: "~/code/atlas", entrypoint: "cli",
-                          startedAt: now.addingTimeInterval(-9800), cpu: 0, gpu: 0, memory: 300_000_000),
-            ClaudeSession(pid: 90004, name: "api-server", status: "busy", folder: "~/code/api-server", entrypoint: "",
-                          startedAt: now.addingTimeInterval(-1300), cpu: 3.4, gpu: 0, memory: 240_000_000,
-                          tasks: [task(90041, "cargo test", cpu: 3.1, age: 25)], tool: .codex),
+            session(90001, "Ship the onboarding flow", "busy", "~/code/atlas", started: 5400, cpu: 1.8, mb: 312, tasks: [
+                task(90011, "swift build -c release", cpu: 24.6, mb: 486, age: 41),
+                task(90012, "npm run dev", cpu: 0.6, mb: 158, age: 1900),
+                task(90013, "npx -y @playwright/mcp", cpu: 0.2, mb: 96, age: 5300),
+                task(90014, "node ~/mcp/github-server/index.js", cpu: 0.1, mb: 64, age: 5300),
+            ]),
+            session(90002, "Fix flaky checkout tests", "busy", "~/code/shop", started: 2700, cpu: 0.9, mb: 268, tasks: [
+                task(90021, "pytest tests/checkout -x", cpu: 9.4, mb: 142, age: 12),
+            ]),
+            session(90003, "Write the release notes", "idle", "~/code/atlas", started: 9800, cpu: 0, mb: 240, tasks: [
+                task(90031, "uvx mcp-server-fetch", cpu: 0, mb: 58, age: 9700),
+            ]),
+            session(90004, "api-server", "busy", "~/code/api-server", started: 1300, cpu: 0.7, mb: 96, tasks: [
+                task(90041, "cargo test", cpu: 3.1, mb: 144, age: 25),
+            ], tool: .codex),
         ]
         store.loadDemo(now: now.timeIntervalSince1970)
         if Prefs.shared.awakeMode == "working" { KeepAwake.shared.check(sessions: sessions); KeepAwake.shared.backdate(72 * 60) }   // show the awake state in demo shots
