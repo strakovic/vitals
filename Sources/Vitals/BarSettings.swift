@@ -11,6 +11,7 @@ struct BarSettings: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 12) {
                 preview
+                section("KEEP MAC AWAKE") { AwakeSettings(prefs: prefs) }
                 section("SHOW IN MENU BAR") {
                     VStack(spacing: 0) {
                         ForEach(orderedMetrics) { metric in
@@ -168,23 +169,33 @@ struct LimeSwitch: View {
 
 /// "Open at login", with the state macOS actually has.
 private struct LoginRow: View {
-    @State private var on = LoginItem.isOn
+    @State private var on = false
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Open at login").font(Theme.regular(12)).foregroundStyle(.white)
-                Text(LoginItem.hasLaunchAgent ? "Set up by build.sh install" : "Always in your menu bar after a restart")
+                Text("Always in your menu bar after a restart")
                     .font(Theme.light(10)).foregroundStyle(Theme.faint)
             }
             Spacer()
             LimeSwitch(isOn: Binding(get: { on }, set: { value in
-                LoginItem.set(value)
-                on = LoginItem.isOn
+                on = value
+                // launchctl is a separate program: ask it off the main thread, never while drawing.
+                DispatchQueue.global(qos: .userInitiated).async {
+                    LoginItem.set(value)
+                    let now = LoginItem.isOn
+                    DispatchQueue.main.async { on = now }
+                }
             }))
-            .disabled(LoginItem.hasLaunchAgent)
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
+        .onAppear {
+            DispatchQueue.global(qos: .userInitiated).async {
+                let now = LoginItem.isOn
+                DispatchQueue.main.async { on = now }
+            }
+        }
     }
 }
 

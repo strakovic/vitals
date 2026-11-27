@@ -44,6 +44,7 @@ Requires a Mac with Apple silicon (M1 or newer) and macOS 14 Sonoma or later.
 - **Battery care.** Set macOS's charge limit (80 to 95% or off) from the menu bar, or charge to 100% just once. Health, cycles, and a notification naming the app when heat starts wearing the battery. On iMac, Mac mini and Mac Studio, which have no battery, disk activity takes its place.
 - **History.** Click any number for its chart, from 15 minutes up to a month, with who was responsible at each point. Kept on your Mac, about 5 MB a year.
 - **Your menu bar, your way.** Pick which numbers sit in the menu bar and in what order.
+- **Keep your Mac awake** while AI agents work, always, or while chosen apps are open, so long tasks finish even when the screen locks.
 - **Your data, exportable.** Export every hour, minute and sample Vitals has kept as a CSV for Numbers, Excel or Sheets (Menu bar tab, or `Vitals --export history.csv`).
 
 ## Lightweight by design

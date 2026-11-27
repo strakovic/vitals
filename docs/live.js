@@ -188,7 +188,7 @@
           <div class="vp-tabs" data-zone="list">
             <div class="vp-tab click" data-tab="apps">Apps</div>
             <div class="vp-tab click" data-tab="ai">AI<span class="badge" data-badge>2</span></div>
-            <div class="vp-tab click" data-tab="bar">Menu bar</div>
+            <div class="vp-tab click" data-tab="bar">Settings</div>
           </div>
           <div class="vp-pane" data-zone="list" style="position:relative;flex:1;margin-top:8px;top:auto">
             <div data-pane="apps" style="position:absolute;inset:0">

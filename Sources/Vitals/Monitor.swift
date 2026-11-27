@@ -289,6 +289,7 @@ final class Monitor: ObservableObject {
             self.record(s)
             SimulatorJanitor.shared.check(sessions: self.sessions, apps: self.apps)
             BatteryGuard.shared.check(system: s, apps: self.apps)
+            KeepAwake.shared.check(sessions: self.sessions)
             self.onUpdate?()
         }
     }

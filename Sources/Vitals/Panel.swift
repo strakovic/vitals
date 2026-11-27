@@ -6,6 +6,7 @@ enum PanelTab: String, CaseIterable { case apps, claude, bar }
 struct PanelView: View {
     @ObservedObject var monitor: Monitor
     @ObservedObject var prefs: Prefs
+    @ObservedObject private var awake = KeepAwake.shared
     @State var tab: PanelTab = .apps
     @State var detail: Metric?
     @State var boosting = false
@@ -85,6 +86,11 @@ struct PanelView: View {
             Circle().fill(Theme.gradient).frame(width: 7, height: 7)
             Text("VITALS").font(Theme.caps(13)).foregroundStyle(Theme.lime).kerning(1)
             Spacer()
+            if awake.isOn {
+                Chip(text: "AWAKE", color: Theme.lime, symbol: "cup.and.saucer.fill")
+                    .help("\(awake.duration): \(awake.reason)")
+                    .clickable(radius: 12) { withAnimation { detail = nil; boosting = false; tab = .bar } }
+            }
             Chip(text: thermalText, color: thermalColor, symbol: "flame").clickable(radius: 12) { open(.temp) }
             if !boosting {
                 Button {
@@ -293,7 +299,7 @@ struct PanelView: View {
         HStack(spacing: 4) {
             TabPill(title: "Apps", selected: tab == .apps) { tab = .apps }
             TabPill(title: "AI", badge: busyCount > 0 ? "\(busyCount)" : nil, selected: tab == .claude) { tab = .claude }
-            TabPill(title: "Menu bar", selected: tab == .bar) { tab = .bar }
+            TabPill(title: "Settings", selected: tab == .bar) { tab = .bar }
         }
         .padding(3)
         .background(Capsule().fill(Color.white.opacity(0.05)))

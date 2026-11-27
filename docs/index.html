@@ -324,6 +324,14 @@
   .sign b { position: absolute; left: 50%; bottom: -46px; transform: translateX(-50%); font-size: clamp(90px, 18vw, 240px); font-weight: 800; letter-spacing: -.06em; line-height: 1;
     background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 80%); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; pointer-events: none; }
   @media (prefers-reduced-motion: reduce) { .words .w { opacity: 1; transform: none; filter: none; } body::after { animation: none; } }
+
+  /* Calm row under the install box */
+  .install { max-width: min(620px, 100%); padding: 8px 8px 8px 16px; font-size: 12.5px; }
+  .req { margin-top: 10px; }
+  .trust-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin: 18px auto 0; max-width: 720px; font-size: 13px; color: var(--faint); }
+  .trust-line span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .trust-line i { width: 13px; height: 13px; border-radius: 50%; background: rgba(213,255,95,.14); position: relative; flex: none; }
+  .trust-line i::after { content: ""; position: absolute; left: 4.4px; top: 2.6px; width: 3px; height: 6px; border: solid var(--lime); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
 </style>
 </head>
 <body>
@@ -360,14 +368,10 @@
       <code><b>curl</b> -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | <b>bash</b></code>
       <button class="copy" data-copy="curl -fsSL https://raw.githubusercontent.com/strakovic/vitals/main/install.sh | bash">Copy</button>
     </div>
-    <p class="req">Apple silicon · macOS 14 or later · 1.8 MB download, 3.9 MB installed</p>
-    <div class="trust">
-      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/><circle cx="12" cy="7" r="0"/></svg><span>Signed by <b>diferent LLC</b>, a verified Apple developer</span></span>
-      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg><span><b>Open source</b>, MIT</span></span>
-      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20M8.5 16.5a5 5 0 017 0M5 12.9a10 10 0 0114 0M2 9.3a14 14 0 015-3"/></svg><span><b>No network</b> access</span></span>
-      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><span><b>No admin</b> password</span></span>
-      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><path d="M3 3l18 18"/></svg><span><b>No tracking</b> or accounts</span></span>
-    </div>
+    <p class="req">Apple silicon · macOS 14 or later · 1.8 MB</p>
+    <p class="trust-line">
+      <span><i></i>Signed by diferent LLC</span><span><i></i>Open source</span><span><i></i>No network access</span><span><i></i>No admin password</span><span><i></i>No tracking</span>
+    </p>
 
     <div class="mac rv">
       <div class="wall"></div>
@@ -594,6 +598,14 @@
   addEventListener('resize', fit);
   addEventListener('load', fit);
   fit();
+
+  // Like the real popover: a click anywhere outside the panel (or Esc) closes it.
+  {
+    const holder = document.querySelector('[data-holder]'), item = document.querySelector('[data-menubar]');
+    const close = () => { if (!holder || holder.classList.contains('closed')) return; holder.classList.add('closed'); item?.classList.remove('open'); };
+    document.addEventListener('pointerdown', e => { if (holder && !holder.contains(e.target) && !item?.contains(e.target)) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  }
 
   // The menu bar clock.
   const clock = document.querySelector('[data-clock]');

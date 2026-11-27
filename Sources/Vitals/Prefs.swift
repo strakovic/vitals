@@ -16,6 +16,9 @@ final class Prefs: ObservableObject {
     @Published var autoSimulators: Bool { didSet { save() } }
     /// Notify when the battery runs hot, naming the app that's working hardest.
     @Published var heatAlerts: Bool { didSet { save() } }
+    /// Keep awake: off, while AI works, or always; plus apps that keep the Mac awake while open.
+    @Published var awakeMode: String { didSet { save() } }
+    @Published var awakeApps: Set<String> { didSet { save() } }
 
     private init() {
         bar = (defaults.stringArray(forKey: "bar") ?? ["cpu", "gpu", "ram", "temp"]).compactMap(Metric.init(rawValue:))
@@ -25,6 +28,8 @@ final class Prefs: ObservableObject {
         boostSimulators = defaults.object(forKey: "boostSimulators") as? Bool ?? true
         autoSimulators = defaults.object(forKey: "autoSimulators") as? Bool ?? true
         heatAlerts = defaults.object(forKey: "heatAlerts") as? Bool ?? true
+        awakeMode = defaults.string(forKey: "awakeMode") ?? "off"
+        awakeApps = Set(defaults.stringArray(forKey: "awakeApps") ?? [])
     }
 
     private func save() {
@@ -35,6 +40,8 @@ final class Prefs: ObservableObject {
         defaults.set(boostSimulators, forKey: "boostSimulators")
         defaults.set(autoSimulators, forKey: "autoSimulators")
         defaults.set(heatAlerts, forKey: "heatAlerts")
+        defaults.set(awakeMode, forKey: "awakeMode")
+        defaults.set(Array(awakeApps), forKey: "awakeApps")
     }
 
     func toggle(_ metric: Metric) {

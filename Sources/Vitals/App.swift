@@ -105,14 +105,22 @@ import ServiceManagement
 /// Starting at login. Downloaded copies use a regular login item (System Settings > General >
 /// Login Items); a build installed with ./build.sh install uses its LaunchAgent instead.
 enum LoginItem {
+    static let label = "app.diferent.Vitals"
     static var hasLaunchAgent: Bool {
-        FileManager.default.fileExists(atPath: NSHomeDirectory() + "/Library/LaunchAgents/app.diferent.Vitals.plist")
+        FileManager.default.fileExists(atPath: NSHomeDirectory() + "/Library/LaunchAgents/\(label).plist")
     }
 
-    static var isOn: Bool { hasLaunchAgent || SMAppService.mainApp.status == .enabled }
+    /// With the LaunchAgent (./build.sh install) it opens at login unless launchd has it disabled.
+    static var isOn: Bool {
+        if hasLaunchAgent { return !launchctl(["print-disabled", "gui/\(getuid())"]).contains("\"\(label)\" => disabled") }
+        return SMAppService.mainApp.status == .enabled
+    }
 
     static func set(_ on: Bool) {
-        if on { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
+        if hasLaunchAgent {
+            // enable/disable only changes whether it starts at login; the running app keeps running.
+            _ = launchctl([on ? "enable" : "disable", "gui/\(getuid())/\(label)"])
+        } else if on { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
     }
 
     static func registerOnFirstLaunch() {
@@ -120,5 +128,16 @@ enum LoginItem {
         guard !hasLaunchAgent, !UserDefaults.standard.bool(forKey: key) else { return }
         UserDefaults.standard.set(true, forKey: key)
         set(true)
+    }
+
+    private static func launchctl(_ args: [String]) -> String {
+        let p = Process(), pipe = Pipe()
+        p.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        p.arguments = args
+        p.standardOutput = pipe
+        p.standardError = FileHandle.nullDevice
+        try? p.run()
+        p.waitUntilExit()
+        return String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
     }
 }
