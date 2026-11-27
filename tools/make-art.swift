@@ -192,7 +192,30 @@ struct Hero: View {
     print("wrote docs/art/\(name)")
 }
 
+/// GitHub's social preview (1280 x 640): what X, LinkedIn, Slack and iMessage show for a repo link.
+struct Social: View {
+    var body: some View {
+        ZStack {
+            Stage(glowX: 0.75)
+            HStack(spacing: 60) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Image(nsImage: image("icon.png")).resizable().frame(width: 128, height: 128)
+                    Text("Vitals").font(.system(size: 92, weight: .bold)).kerning(-3).foregroundStyle(.white).padding(.top, 18)
+                    Text("Your Mac's vital signs,\none click away.").font(.system(size: 34)).foregroundStyle(.white.opacity(0.65)).lineSpacing(4).padding(.top, 6)
+                    Text("Free · Open source · Notarized").font(.system(size: 22, weight: .medium, design: .monospaced))
+                        .foregroundStyle(lime).padding(.top, 26)
+                }
+                .frame(width: 600, alignment: .leading)
+                Screen(name: "panel.png", height: 560).offset(y: 70)
+            }
+        }
+        .frame(width: 1280, height: 640)
+        .clipped()
+    }
+}
+
 MainActor.assumeIsolated {
+    save(Social(), "social-preview.png")
     save(Hero(), "hero.png")
     save(Feature(kicker: "Live", title: "Everything your Mac is doing, on one calm screen.",
                  text: "CPU, GPU and memory share one live chart. Hover it and the numbers rewind. Then every app, heaviest first.",
