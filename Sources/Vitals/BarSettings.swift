@@ -10,7 +10,6 @@ struct BarSettings: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 12) {
-                preview
                 section("KEEP MAC AWAKE") { AwakeSettings(prefs: prefs) }
                 section("SHOW IN MENU BAR") {
                     VStack(spacing: 0) {
@@ -46,23 +45,6 @@ struct BarSettings: View {
     private var orderedMetrics: [Metric] {
         (prefs.bar + Metric.allCases.filter { !prefs.bar.contains($0) })
             .filter { $0 != .battery || monitor.system.power.hasBattery }   // desktop Macs have none
-    }
-
-    private var preview: some View {
-        HStack {
-            Spacer()
-            Image(nsImage: BarRenderer.render(monitor, prefs: prefs, dark: true))
-                .interpolation(.high)
-            Image(systemName: "wifi").font(.system(size: 12)).foregroundStyle(.white.opacity(0.9))
-            Text(Date.now.formatted(date: .omitted, time: .shortened)).font(.system(size: 12)).foregroundStyle(.white.opacity(0.9))
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 30)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.08)))
-        .overlay(alignment: .topLeading) {
-            Text("PREVIEW").font(Theme.caps(7)).kerning(0.6).foregroundStyle(Theme.faint).offset(x: 10, y: -12)
-        }
-        .padding(.top, 12)
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
