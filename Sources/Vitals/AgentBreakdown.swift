@@ -27,7 +27,10 @@ struct UsageBreakdown: View {
         Color(red: 1, green: 0.5, blue: 0.68),       // pink
     ]
 
-    private var parts: [Part] {
+    private var parts: [Part] { Self.parts(session: session, tasks: tasks) }
+
+    /// The agent first, then its tasks in their colours, then helpers in greys. Shared with the closed card.
+    static func parts(session: ClaudeSession, tasks: [ClaudeTask]) -> [Part] {
         var list = [Part(id: session.pid, name: session.tool.title, detail: "the agent itself", kind: "AGENT",
                          cpu: session.ownCpu, memory: session.ownMemory, color: Theme.lime)]
         var working = 0, helping = 0
@@ -36,7 +39,7 @@ struct UsageBreakdown: View {
             if task.isBackground {
                 color = Color.white.opacity([0.42, 0.3, 0.2][helping % 3]); helping += 1
             } else {
-                color = Self.palette[working % Self.palette.count]; working += 1
+                color = palette[working % palette.count]; working += 1
             }
             list.append(Part(id: task.pid, name: Self.shortName(task.command), detail: task.command,
                              kind: task.isBackground ? "HELPER" : "TASK", cpu: task.cpu, memory: task.memory,
@@ -102,11 +105,12 @@ struct UsageBreakdown: View {
 }
 
 /// A thin bar split by part, with the total at the end. The focused part stays bright.
-private struct SplitBar: View {
+struct SplitBar: View {
     var label: String
     var total: String
     var parts: [(id: pid_t, value: Double, color: Color)]
     var focus: pid_t?
+    var compact = false
 
     var body: some View {
         HStack(spacing: 8) {
@@ -127,9 +131,10 @@ private struct SplitBar: View {
                 .background(Capsule().fill(Color.white.opacity(0.06)))
                 .clipShape(Capsule())
             }
-            .frame(height: 6)
-            Text(total).font(Theme.regular(10)).monospacedDigit().foregroundStyle(.white.opacity(0.8))
-                .frame(width: 48, alignment: .trailing)
+            .frame(height: compact ? 4 : 6)
+            Text(total).font(Theme.regular(compact ? 9 : 10)).monospacedDigit().foregroundStyle(.white.opacity(0.8))
+                .frame(width: compact ? 0 : 48, alignment: .trailing)
+                .opacity(compact ? 0 : 1)
         }
     }
 }

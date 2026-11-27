@@ -982,12 +982,21 @@ struct SessionCard: View {
                 UsageBreakdown(session: session, tasks: active + background, refresh: refresh)
                     .padding(.top, 6)
                     .transition(.opacity.combined(with: .move(edge: .top)))
-            } else if !active.isEmpty {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(active.prefix(5)) { task in TaskRow(task: task, refresh: refresh) }
+            } else {
+                // Who is carrying the load, at a glance: CPU while it works, memory while it rests.
+                let parts = UsageBreakdown.parts(session: session, tasks: active + background)
+                let byCpu = parts.reduce(0) { $0 + $1.cpu } >= 1
+                SplitBar(label: byCpu ? "CPU" : "MEM", total: "",
+                         parts: parts.map { ($0.id, byCpu ? $0.cpu : Double($0.memory), $0.color) }, compact: true)
+                    .padding(.leading, 20).padding(.trailing, 2).padding(.top, 3)
+                if !active.isEmpty {
+                    let colors = Dictionary(parts.map { ($0.id, $0.color) }, uniquingKeysWith: { a, _ in a })
+                    VStack(alignment: .leading, spacing: 1) {
+                        ForEach(active.prefix(5)) { task in TaskRow(task: task, color: colors[task.pid], refresh: refresh) }
+                    }
+                    .padding(.leading, 20)
+                    .padding(.top, 2)
                 }
-                .padding(.leading, 20)
-                .padding(.top, 2)
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
@@ -1027,15 +1036,22 @@ struct Metric3: View {
 struct TaskRow: View {
     var task: ClaudeTask
     var dim = false
+    var color: Color? = nil      // its colour in the card's load bar
     var refresh: () -> Void = {}
     @State private var hovering = false
     @State private var stopping: StopState = .none
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: dim ? "server.rack" : "chevron.right")
-                .font(.system(size: 7, weight: .bold))
-                .foregroundStyle(dim ? Theme.faint : Theme.lime.opacity(0.8))
-                .frame(width: 12)
+            Group {
+                if let color {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous).fill(color).frame(width: 6, height: 6)
+                } else {
+                    Image(systemName: dim ? "server.rack" : "chevron.right")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundStyle(dim ? Theme.faint : Theme.lime.opacity(0.8))
+                }
+            }
+            .frame(width: 12)
             Text(task.command)
                 .font(Theme.mono(9.5))
                 .foregroundStyle(.white.opacity(dim ? 0.4 : 0.82))
