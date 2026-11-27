@@ -779,12 +779,16 @@ struct StopButton: View {
                 ProgressView().controlSize(.mini).frame(width: 18, height: 18)
             case .stuck:
                 Button(action: action) {
-                    Text("FORCE").font(Theme.caps(7.5)).kerning(0.5)
+                    // One line, always: the pill grows to the left over the row instead of wrapping.
+                    Text("FORCE").font(Theme.caps(7)).kerning(0.5)
+                        .lineLimit(1).fixedSize()
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 6).padding(.vertical, 4)
-                        .background(Capsule().fill(Color.red.opacity(0.75)))
+                        .padding(.horizontal, 7).padding(.vertical, 4)
+                        .background(Capsule().fill(Theme.red))
+                        .shadow(color: Theme.red.opacity(0.45), radius: 6)
                 }
                 .buttonStyle(.plain)
+                .pointer()
                 .help("Still running. Click to force quit")
             case .none:
                 Button(action: action) {
@@ -802,7 +806,7 @@ struct StopButton: View {
                 .allowsHitTesting(visible)
             }
         }
-        .frame(minWidth: 18)
+        .frame(minWidth: 18, alignment: .trailing)
     }
 }
 
@@ -825,7 +829,7 @@ struct AppRow: View {
     var ram: Double
     var refresh: () -> Void = {}
     @State private var hovering = false
-    @State private var stopping: StopState = .none
+    @State private var stopping: StopState = ProcessInfo.processInfo.environment["VITALS_STUCK"] != nil ? .stuck : .none   // snapshots can show the force state
 
     var body: some View {
         HStack(spacing: 0) {
@@ -861,6 +865,7 @@ struct AppRow: View {
             cell(Fmt.bytes(app.memory), heat: Double(app.memory) / ram * 4, width: AppColumn.memory.width)
             cell(app.gpu >= 0.5 ? String(format: "%.0f%%", app.gpu) : "–",
                  heat: app.gpu / 50, width: AppColumn.gpu.width)
+                .opacity(stopping == .stuck ? 0 : 1)   // the Force pill sits here
 
             StopButton(state: stopping, visible: hovering && Killer.canQuit(app), help: "Quit \(app.name)") {
                 switch stopping {
