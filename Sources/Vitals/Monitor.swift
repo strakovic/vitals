@@ -166,6 +166,7 @@ final class Monitor: ObservableObject {
                           tasks: [task(90041, "cargo test", cpu: 3.1, age: 25)], tool: .codex),
         ]
         store.loadDemo(now: now.timeIntervalSince1970)
+        if Prefs.shared.awakeMode == "working" { KeepAwake.shared.check(sessions: sessions); KeepAwake.shared.backdate(72 * 60) }   // show the awake state in demo shots
     }
 
     // MARK: Recent history across restarts

@@ -67,6 +67,9 @@ final class KeepAwake: ObservableObject {
         }
     }
 
+    /// Demo screenshots only: pretend it has been awake for a while.
+    func backdate(_ seconds: TimeInterval) { if since != nil { since = Date().addingTimeInterval(-seconds) } }
+
     /// "Awake for 5 min".
     var duration: String {
         guard let since else { return "" }
