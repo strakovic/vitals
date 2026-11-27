@@ -148,7 +148,7 @@ struct DetailView: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text(hover == nil ? "LIVE" : "AT").font(Theme.caps(7.5)).kerning(0.6).foregroundStyle(Theme.lime.opacity(0.8))
-                Text(hover.map { timeLabel($0.t) } ?? "hover the chart").font(Theme.light(11)).foregroundStyle(Theme.dim)
+                Text(hover.map { timeLabel($0.t) } ?? "").font(Theme.light(11)).foregroundStyle(Theme.dim)
                 if let users = hover.flatMap(topAt), let first = users.first {
                     Text("\(first.n) \(spec.formatTop(first.v))")
                         .font(Theme.light(10)).foregroundStyle(.white.opacity(0.75)).lineLimit(1)

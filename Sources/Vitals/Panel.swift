@@ -91,7 +91,10 @@ struct PanelView: View {
                     .help("\(awake.duration): \(awake.reason)")
                     .clickable(radius: 12) { withAnimation { detail = nil; boosting = false; tab = .bar } }
             }
-            Chip(text: thermalText, color: thermalColor, symbol: "flame").clickable(radius: 12) { open(.temp) }
+            if monitor.system.thermalState != .nominal {
+                // Only worth a chip when it isn't cool.
+                Chip(text: thermalText, color: thermalColor, symbol: "flame").clickable(radius: 12) { open(.temp) }
+            }
             if !boosting {
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.88)) { detail = nil; boosting = true }
@@ -343,10 +346,9 @@ struct PanelView: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     let apps = displayedApps
                     let ram = Double(max(1, monitor.system.memory.total))
-                    let top = max(apps.map { $0.load(ram: ram) }.max() ?? 1, 0.0001)
                     VStack(spacing: 2) {
                         ForEach(apps) { app in
-                            AppRow(app: app, share: app.load(ram: ram) / top, ram: ram, refresh: refresh)
+                            AppRow(app: app, ram: ram, refresh: refresh)
                         }
                     }
                     .padding(.horizontal, 10)
@@ -398,9 +400,6 @@ struct PanelView: View {
             } else {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 6) {
-                        if !sessions.isEmpty {
-                            SessionSummary(sessions: sessions).clickable(radius: 14) { open(.claude) }
-                        }
                         ForEach(AITool.allCases, id: \.self) { tool in
                             let group = sessions.filter { $0.tool == tool }
                             if !group.isEmpty {
@@ -413,9 +412,8 @@ struct PanelView: View {
                         if !apps.isEmpty {
                             sectionTitle("AI APPS", detail: "\(apps.count) open")
                             let ram = Double(max(1, monitor.system.memory.total))
-                            let top = max(apps.map { $0.load(ram: ram) }.max() ?? 1, 0.0001)
                             ForEach(apps) { app in
-                                AppRow(app: app, share: app.load(ram: ram) / top, ram: ram, refresh: refresh)
+                                AppRow(app: app, ram: ram, refresh: refresh)
                             }
                         }
                     }
@@ -825,7 +823,6 @@ extension AppUsage {
 
 struct AppRow: View {
     var app: AppUsage
-    var share: Double
     var ram: Double
     var refresh: () -> Void = {}
     @State private var hovering = false
@@ -890,19 +887,8 @@ struct AppRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .frame(minHeight: 40)
-        .overlay(alignment: .bottomLeading) {
-            // How much of the load this app is, relative to the heaviest: a slim line under the row.
-            GeometryReader { geo in
-                Capsule()
-                    .fill(LinearGradient(colors: [Theme.green.opacity(0.7), Theme.lime.opacity(0.9)], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(2, (geo.size.width - 48) * min(1, share)), height: 2)
-                    .offset(x: 40, y: geo.size.height - 3)
-                    .opacity(0.55)
-            }
-        }
         .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.white.opacity(hovering ? 0.06 : 0.025)))
         .onHover { hovering = $0 }
-        .animation(.easeOut(duration: 0.4), value: share)
     }
 
     /// A value in a column: dim when it's nothing, white normally, orange then red as it gets heavy.
@@ -912,32 +898,6 @@ struct AppRow: View {
             .foregroundStyle(heat >= 1 ? Theme.red : heat >= 0.45 ? Theme.orange : heat < 0.02 ? Theme.faint : .white.opacity(0.88))
             .lineLimit(1)
             .frame(width: width, alignment: .trailing)
-    }
-}
-
-struct SessionSummary: View {
-    var sessions: [ClaudeSession]
-    var body: some View {
-        let busy = sessions.filter(\.isBusy).count
-        let cpu = sessions.reduce(0) { $0 + $1.cpu }
-        let memory = sessions.reduce(UInt64(0)) { $0 + $1.memory }
-        let tasks = sessions.reduce(0) { $0 + $1.tasks.filter { !$0.isBackground }.count }
-        HStack(spacing: 0) {
-            stat("\(busy)/\(sessions.count)", "WORKING")
-            stat("\(tasks)", "TASKS")
-            stat(String(format: "%.0f%%", cpu), "CPU")
-            stat(Fmt.bytes(memory), "MEMORY")
-        }
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
-    }
-
-    private func stat(_ value: String, _ label: String) -> some View {
-        VStack(spacing: 2) {
-            Text(value).font(Theme.light(16)).monospacedDigit().foregroundStyle(.white)
-            Text(label).font(Theme.caps(7.5)).kerning(0.6).foregroundStyle(Theme.lime.opacity(0.85))
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 

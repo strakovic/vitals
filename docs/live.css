@@ -193,3 +193,6 @@
 .vp[data-focus="list"] [data-zone="list"] { opacity: 1; filter: none; }
 .vp[data-focus="live"] [data-zone="live"] { box-shadow: 0 0 0 1.5px rgba(213,255,95,.55), 0 0 46px -8px rgba(213,255,95,.45); }
 .vp[data-focus="list"] .vp-pane[data-zone="list"] { border-radius: 14px; box-shadow: inset 0 0 0 1.5px rgba(213,255,95,.4); margin-left: 4px; margin-right: 4px; }
+
+/* Like the app: no load line under each row. */
+.vp-row .load { display: none; }

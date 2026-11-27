@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Pick what the menu bar shows and how often it updates.
+/// Settings: keep awake, what the menu bar shows, and a few general options.
 struct BarSettings: View {
     @ObservedObject var monitor: Monitor
     @ObservedObject var prefs: Prefs
@@ -20,21 +20,20 @@ struct BarSettings: View {
                     }
                     .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
                 }
-                section("UPDATE EVERY") {
-                    Segments(options: [(1.0, "1 s"), (2.0, "2 s"), (5.0, "5 s")], selection: $prefs.interval)
-                }
-                LoginRow()
-                ExportRow(monitor: monitor)
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Warning colors").font(Theme.regular(12)).foregroundStyle(.white)
-                        Text("Orange or red when hot, full or low").font(Theme.light(10)).foregroundStyle(Theme.faint)
+                section("GENERAL") {
+                    VStack(spacing: 0) {
+                        LoginRow()
+                        divider
+                        row("Warning colors", "Orange or red when hot, full or low") { LimeSwitch(isOn: $prefs.colorAlerts) }
+                        divider
+                        row("Update every", "How often the numbers refresh") {
+                            Segments(options: [(1.0, "1 s"), (2.0, "2 s"), (5.0, "5 s")], selection: $prefs.interval).frame(width: 132)
+                        }
+                        divider
+                        ExportRow(monitor: monitor)
                     }
-                    Spacer()
-                    LimeSwitch(isOn: $prefs.colorAlerts)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
                 }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
             }
             .padding(.horizontal, 14)
             .padding(.bottom, 8)
@@ -45,6 +44,20 @@ struct BarSettings: View {
     private var orderedMetrics: [Metric] {
         (prefs.bar + Metric.allCases.filter { !prefs.bar.contains($0) })
             .filter { $0 != .battery || monitor.system.power.hasBattery }   // desktop Macs have none
+    }
+
+    private var divider: some View { Rectangle().fill(Theme.hairline).frame(height: 1).padding(.leading, 12) }
+
+    private func row<Trailing: View>(_ title: String, _ detail: String, @ViewBuilder trailing: () -> Trailing) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Theme.regular(12)).foregroundStyle(.white)
+                Text(detail).font(Theme.light(10)).foregroundStyle(Theme.faint)
+            }
+            Spacer()
+            trailing()
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -170,8 +183,7 @@ private struct LoginRow: View {
                 }
             }))
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
+        .padding(.horizontal, 12).padding(.vertical, 10)
         .onAppear {
             DispatchQueue.global(qos: .userInitiated).async {
                 let now = LoginItem.isOn
@@ -188,15 +200,14 @@ private struct ExportRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Export all history").font(Theme.regular(12)).foregroundStyle(.white)
-                Text(saved ?? "CSV for Numbers, Excel or Sheets: every hour, minute and sample kept")
+                Text("Export history").font(Theme.regular(12)).foregroundStyle(.white)
+                Text(saved ?? "Everything Vitals has kept, as a CSV file")
                     .font(Theme.light(10)).foregroundStyle(saved == nil ? Theme.faint : Theme.lime.opacity(0.85)).lineLimit(1)
             }
             Spacer()
             QuietButton(title: "Export…", symbol: "square.and.arrow.up", size: 11) { export() }
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.card))
+        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 
     private func export() {

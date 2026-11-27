@@ -356,6 +356,7 @@
         q(`[data-ms="${k}"]`).setAttribute('d', sparkPath(minis[k][1], 100, 12));
       }
       q('[data-thermal]').textContent = sim.temp > 85 ? 'HOT' : sim.temp > 70 ? 'WARM' : 'COOL';
+      q('[data-thermal]').parentElement.style.display = sim.temp > 70 ? '' : 'none';   // like the app: only when it isn't cool
       const charging = this.fullOnce || this.limit === 100;
       q('[data-held]').textContent = charging ? (this.fullOnce ? 'charging to 100%' : 'charges to 100%') : 'held at ' + this.limit + '%';
       // tabs
@@ -428,7 +429,6 @@
       const sig = sessions.map(s => s.id + s.stopped + s.tasks.map(t => t.cmd).join()).join('|');
       const scroll = box.scrollTop;
       box.innerHTML = `
-        <div class="vp-sum">${[[working + '/' + sessions.length, 'Working'], [tasks, 'Tasks'], [Math.round(cpu) + '%', 'CPU'], [gbs(sessions.reduce((n, s) => n + s.mem, 0)), 'Memory']].map(([v, l]) => `<div><b class="num">${v}</b><span class="caps">${l}</span></div>`).join('')}</div>
         ${groups.map(g => { const list = sessions.filter(s => s.tool === g); return `<div class="vp-sect"><span class="caps" style="color:rgba(213,255,95,.8)">${esc(g)}</span><span>${list.filter(busy).length} of ${list.length} working</span></div>${list.map(card).join('')}`; }).join('')}
         <div class="vp-sect"><span class="caps" style="color:rgba(213,255,95,.8)">AI apps</span><span>2 open</span></div>
         ${sim.apps.filter(a => a.aiApp).map(a => `<div class="vp-card2" style="display:flex;align-items:center;gap:10px"><div class="ic" style="width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:10px;background:linear-gradient(160deg,${a.ic[0]},${a.ic[1]})">${a.g}</div><b style="flex:1;font-weight:400">${a.name}</b><span class="met num">${pct(a.cpu)}&nbsp;&nbsp;${gbs(a.mem)}</span></div>`).join('')}`;

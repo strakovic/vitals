@@ -94,6 +94,8 @@ if let i = args.firstIndex(of: "--snapshot"), i + 1 < args.count {
         save(PanelView(monitor: monitor, prefs: prefs, tab: tab), "panel-\(tab.rawValue)")
     }
         save(PanelView(monitor: monitor, prefs: prefs, boosting: true), "panel-boost")
+    // The whole Settings tab, unscrolled, to check everything below the fold.
+    save(BarSettings(monitor: monitor, prefs: prefs).frame(width: 392, height: 900).background(Theme.base).preferredColorScheme(.dark), "settings-full")
     for metric in [Metric.cpu, .temp, .net, .claude, .battery] {
         save(PanelView(monitor: monitor, prefs: prefs, detail: metric), "detail-\(metric.rawValue)")
     }
